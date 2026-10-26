@@ -1,0 +1,43 @@
+Примеры команд
+
+MPUSH numbers 10
+MPUSH numbers 20
+MINSERT numbers 1 15
+PRINT numbers
+MGET numbers 1
+MSET numbers 1 17
+MDEL numbers 0
+MLEN numbers
+
+FHEAD linked 10
+FTAIL linked 30
+FBEFORE linked 30 20
+PRINT linked
+FFIND linked 20
+FDELAFTER linked 10
+FDELHEAD linked
+
+LHEAD doubly 3
+LTAIL doubly 7
+LBEFORE doubly 7 5
+PRINT doubly
+LDELBEFORE doubly 7
+
+SPUSH mystack 1
+SPUSH mystack 2
+SGET mystack
+SPOP mystack
+SREAD mystack
+
+QPUSH myqueue 100
+QPUSH myqueue 200
+QGET myqueue
+QPOP myqueue
+QREAD myqueue
+
+TINSERT mytree 8
+TINSERT mytree 4
+TINSERT mytree 12
+ISMEMBER mytree 4
+TDEL mytree 8
+TREAD mytree
