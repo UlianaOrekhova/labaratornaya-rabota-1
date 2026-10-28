@@ -1,25 +1,64 @@
 #include "Stack.h"
 
-void StackData::push(int value)
+StackData::StackData()
 {
-    items.push_back(value);
+    capacity = 10;
+    count = 0;
+    items = new std::string[capacity];
 }
 
-bool StackData::pop(int &value)
+StackData::~StackData()
 {
-    if (items.empty()) return false;
-    value = items.back();
-    items.pop_back();
+    delete[] items;
+}
+
+void StackData::grow()
+{
+    capacity = capacity * 2;
+    std::string *newItems = new std::string[capacity];
+
+    for (int i = 0; i < count; i++)
+        newItems[i] = items[i];
+
+    delete[] items;
+    items = newItems;
+}
+
+void StackData::push(const std::string &value)
+{
+    if (count == capacity)
+        grow();
+
+    items[count] = value;
+    count++;
+}
+
+bool StackData::pop(std::string &value)
+{
+    if (count == 0)
+        return false;
+
+    count--;
+    value = items[count];
     return true;
 }
 
-
-std::vector<int> StackData::values() const
+bool StackData::peek(std::string &value) const
 {
-    return items;
+    if (count == 0)
+        return false;
+
+    value = items[count - 1];
+    return true;
 }
 
-void StackData::load(const std::vector<int> &data)
+bool StackData::empty() const
 {
-    items =data;
+    return count == 0;
+}
+
+void StackData::writeValues(std::ostream &out) const
+{
+    for (int i = 0; i < count; i++)
+        out << " " << items[i];
 }

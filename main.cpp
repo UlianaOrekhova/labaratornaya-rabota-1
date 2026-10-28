@@ -19,72 +19,26 @@ struct Database
     map<string, DSpisok> doublyLists;
     map<string, StackData> stacks;
     map<string, QueueData> queues;
-    map<string, FullTree> trees;
+    map<string, TreeNode *> trees;
 };
+
+template <typename T>
+void printValues(const T &items)
+{
+    cout << "->";
+    if (items.empty())
+        cout << " (empty)";
+    else
+        items.writeValues(cout);
+    cout << endl;
+}
 
 void printResult(bool result)
 {
-    cout << (result ? "-> TRUE" : "-> FALSE") << endl;
-}
-
-void printValues(const ArrayData &items)
-{
-    cout << "->";
-    if (items.count == 0)
-        cout << " (empty)";
+    if (result)
+        cout << "-> TRUE" << endl;
     else
-        arrayWrite(items, cout);
-    cout << endl;
-}
-
-void printValues(const SSpisok &items)
-{
-    cout << "->";
-    if (items.head == nullptr)
-        cout << " (empty)";
-    else
-        listWrite(items, cout);
-    cout << endl;
-}
-
-void printValues(const DSpisok &items)
-{
-    cout << "->";
-    if (items.head == nullptr)
-        cout << " (empty)";
-    else
-        dListWrite(items, cout);
-    cout << endl;
-}
-
-void printValues(const StackData &items)
-{
-    cout << "->";
-    if (items.top == nullptr)
-        cout << " (empty)";
-    else
-        stackWrite(items, cout);
-    cout << endl;
-}
-
-void printValues(const QueueData &items)
-{
-    cout << "->";
-    if (items.head == nullptr)
-        cout << " (empty)";
-    else
-        queueWrite(items, cout);
-    cout << endl;
-}
-
-void printValues(const FullTree &items)
-{
-    cout << "->";
-    if (items.root == nullptr)
-        cout << " (empty)";
-    else
-        treeWrite(items, cout);
-    cout << endl;
+        cout << "-> FALSE" << endl;
 }
 
 void loadData(const string &fileName, Database &db)
@@ -102,42 +56,41 @@ void loadData(const string &fileName, Database &db)
         if (!(input >> type >> name))
             continue;
 
-        int value;
+        string value;
         if (type == 'M')
         {
             ArrayData &items = db.arrays[name];
             while (input >> value)
-                arrayPushBack(items, value);
+                items.pushBack(value);
         }
         else if (type == 'F')
         {
             SSpisok &items = db.singlyLists[name];
             while (input >> value)
-                listPushBack(items, value);
+                items.pushBack(value);
         }
         else if (type == 'L')
         {
             DSpisok &items = db.doublyLists[name];
             while (input >> value)
-                dListPushBack(items, value);
+                items.pushBack(value);
         }
         else if (type == 'S')
         {
             StackData &items = db.stacks[name];
             while (input >> value)
-                stackPush(items, value);
+                items.push(value);
         }
         else if (type == 'Q')
         {
             QueueData &items = db.queues[name];
             while (input >> value)
-                queuePush(items, value);
+                items.push(value);
         }
         else if (type == 'T')
         {
-            FullTree &items = db.trees[name];
             while (input >> value)
-                treeInsert(items, value);
+                insertTree(db.trees[name], value);
         }
     }
 }
@@ -154,85 +107,82 @@ void saveData(const string &fileName, const Database &db)
     for (const auto &item : db.arrays)
     {
         file << "M " << item.first;
-        arrayWrite(item.second, file);
+        item.second.writeValues(file);
         file << endl;
     }
     for (const auto &item : db.singlyLists)
     {
         file << "F " << item.first;
-        listWrite(item.second, file);
+        item.second.writeValues(file);
         file << endl;
     }
     for (const auto &item : db.doublyLists)
     {
         file << "L " << item.first;
-        dListWrite(item.second, file);
+        item.second.writeValues(file);
         file << endl;
     }
     for (const auto &item : db.stacks)
     {
         file << "S " << item.first;
-        stackWrite(item.second, file);
+        item.second.writeValues(file);
         file << endl;
     }
     for (const auto &item : db.queues)
     {
         file << "Q " << item.first;
-        queueWrite(item.second, file);
+        item.second.writeValues(file);
         file << endl;
     }
     for (const auto &item : db.trees)
     {
         file << "T " << item.first;
-        treeWrite(item.second, file);
+        writeTreeValues(item.second, file);
         file << endl;
     }
 }
 
 void printNamed(const string &name, const Database &db)
 {
-    auto item = db.arrays.find(name);
-    if (item != db.arrays.end())
+    auto m = db.arrays.find(name);
+    if (m != db.arrays.end())
     {
-        printValues(item->second);
+        printValues(m->second);
         return;
     }
-
     auto f = db.singlyLists.find(name);
     if (f != db.singlyLists.end())
     {
         printValues(f->second);
         return;
     }
-
     auto l = db.doublyLists.find(name);
     if (l != db.doublyLists.end())
     {
         printValues(l->second);
         return;
     }
-
     auto s = db.stacks.find(name);
     if (s != db.stacks.end())
     {
         printValues(s->second);
         return;
     }
-
     auto q = db.queues.find(name);
     if (q != db.queues.end())
     {
         printValues(q->second);
         return;
     }
-
     auto t = db.trees.find(name);
     if (t != db.trees.end())
     {
-        printValues(t->second);
+        cout << "->";
+        if (treeEmpty(t->second)) cout << " (empty)";
+        else writeTreeValues(t->second, cout);
+        cout << endl;
         return;
     }
-
     cout << "-> Container not found" << endl;
 }
 
@@ -241,9 +191,9 @@ void printHelp()
     cout << "MCREATE name, MPUSH name value, MINSERT name index value, MGET name index, MDEL name index, MSET name index value, MLEN name, MREAD name" << endl;
     cout << "FPUSH/FTAIL name value, FHEAD name value, FBEFORE name target value, FAFTER name target value" << endl;
     cout << "FDEL name value, FDELAT name index, FDELHEAD name, FDELTAIL name, FDELBEFORE name target, FDELAFTER name target, FGET name index, FFIND name value, FREAD name" << endl;
-    cout << "L commands: LPUSH/LTAIL/LHEAD/LBEFORE/LAFTER/LDEL/LDELAT/LDELHEAD/LDELTAIL/LDELBEFORE/LDELAFTER/LGET/LFIND/LREAD" << endl;
+    cout << "L commands work like F commands: LPUSH/LTAIL/LHEAD/LBEFORE/LAFTER/LDEL/LDELAT/LDELHEAD/LDELTAIL/LDELBEFORE/LDELAFTER/LGET/LFIND/LREAD" << endl;
     cout << "SPUSH name value, SPOP name, SGET name, SREAD name; QPUSH name value, QPOP name, QGET name, QREAD name" << endl;
-    cout << "TINSERT name value, TGET name value, TREAD name, TISFULL name, ISMEMBER name value, PRINT name, HELP, EXIT" << endl;
+    cout << "TINSERT name value, TGET name value, TREAD name, ISMEMBER name value, ISFULL name, PRINT name, HELP, EXIT" << endl;
 }
 
 void execute(const string &command, Database &db, bool &changed)
@@ -255,13 +205,11 @@ void execute(const string &command, Database &db, bool &changed)
 
     if (operation.empty())
         return;
-
     if (operation == "HELP")
     {
         printHelp();
         return;
     }
-
     if (operation == "PRINT")
     {
         string name;
@@ -273,7 +221,8 @@ void execute(const string &command, Database &db, bool &changed)
     }
 
     string name;
-    int value, index, target;
+    string value, target;
+    int index;
 
     if (operation == "MCREATE")
     {
@@ -292,11 +241,10 @@ void execute(const string &command, Database &db, bool &changed)
             cout << "-> EXISTS" << endl;
         return;
     }
-
     if (operation == "MPUSH")
     {
         if (!(input >> name >> value)) { cout << "Invalid arguments" << endl; return; }
-        arrayPushBack(db.arrays[name], value);
+        db.arrays[name].pushBack(value);
         changed = true;
         cout << "-> OK" << endl;
         return;
@@ -304,7 +252,7 @@ void execute(const string &command, Database &db, bool &changed)
     if (operation == "MINSERT")
     {
         if (!(input >> name >> index >> value)) { cout << "Invalid arguments" << endl; return; }
-        if (arrayInsertAt(db.arrays[name], index, value)) { changed = true; cout << "-> OK" << endl; }
+        if (db.arrays[name].insertAt(index, value)) { changed = true; cout << "-> OK" << endl; }
         else cout << "-> Invalid index" << endl;
         return;
     }
@@ -312,7 +260,7 @@ void execute(const string &command, Database &db, bool &changed)
     {
         if (!(input >> name >> index)) { cout << "Invalid arguments" << endl; return; }
         auto item = db.arrays.find(name);
-        if (item != db.arrays.end() && arrayGetAt(item->second, index, value)) cout << "-> " << value << endl;
+        if (item != db.arrays.end() && item->second.getAt(index, value)) cout << "-> " << value << endl;
         else cout << "-> Invalid index or container" << endl;
         return;
     }
@@ -320,7 +268,7 @@ void execute(const string &command, Database &db, bool &changed)
     {
         if (!(input >> name >> index)) { cout << "Invalid arguments" << endl; return; }
         auto item = db.arrays.find(name);
-        if (item != db.arrays.end() && arrayEraseAt(item->second, index, value)) { changed = true; cout << "-> " << value << endl; }
+        if (item != db.arrays.end() && item->second.eraseAt(index, value)) { changed = true; cout << "-> " << value << endl; }
         else cout << "-> Invalid index or container" << endl;
         return;
     }
@@ -328,7 +276,7 @@ void execute(const string &command, Database &db, bool &changed)
     {
         if (!(input >> name >> index >> value)) { cout << "Invalid arguments" << endl; return; }
         auto item = db.arrays.find(name);
-        if (item != db.arrays.end() && arraySetAt(item->second, index, value)) { changed = true; cout << "-> OK" << endl; }
+        if (item != db.arrays.end() && item->second.setAt(index, value)) { changed = true; cout << "-> OK" << endl; }
         else cout << "-> Invalid index or container" << endl;
         return;
     }
@@ -336,7 +284,7 @@ void execute(const string &command, Database &db, bool &changed)
     {
         if (!(input >> name)) { cout << "Missing container name" << endl; return; }
         auto item = db.arrays.find(name);
-        if (item != db.arrays.end()) cout << "-> " << arrayLength(item->second) << endl;
+        if (item != db.arrays.end()) cout << "-> " << item->second.length() << endl;
         else cout << "-> 0" << endl;
         return;
     }
@@ -356,25 +304,22 @@ void execute(const string &command, Database &db, bool &changed)
             if (!(input >> name >> target >> value)) { cout << "Invalid arguments" << endl; return; }
             bool result;
             if (operation == "FBEFORE")
-                result = listInsertBefore(db.singlyLists[name], target, value);
+                result = db.singlyLists[name].insertBefore(target, value);
             else
-                result = listInsertAfter(db.singlyLists[name], target, value);
+                result = db.singlyLists[name].insertAfter(target, value);
             if (result) { changed = true; cout << "-> OK" << endl; }
             else cout << "-> Target not found" << endl;
         }
         else
         {
             if (!(input >> name >> value)) { cout << "Invalid arguments" << endl; return; }
-            if (operation == "FHEAD")
-                listPushFront(db.singlyLists[name], value);
-            else
-                listPushBack(db.singlyLists[name], value);
+            if (operation == "FHEAD") db.singlyLists[name].pushFront(value);
+            else db.singlyLists[name].pushBack(value);
             changed = true;
             cout << "-> OK" << endl;
         }
         return;
     }
-
     if (operation == "FDEL" || operation == "FDELAT" || operation == "FDELHEAD" || operation == "FDELTAIL" || operation == "FDELBEFORE" || operation == "FDELAFTER")
     {
         if (!(input >> name)) { cout << "Missing container name" << endl; return; }
@@ -384,30 +329,29 @@ void execute(const string &command, Database &db, bool &changed)
         if (operation == "FDEL")
         {
             if (!(input >> value)) { cout << "Missing value" << endl; return; }
-            result = listEraseValue(item->second, value);
+            result = item->second.eraseValue(value);
         }
         else if (operation == "FDELAT")
         {
             if (!(input >> index)) { cout << "Missing index" << endl; return; }
-            result = listEraseAt(item->second, index, value);
+            result = item->second.eraseAt(index, value);
         }
-        else if (operation == "FDELHEAD") result = listEraseHead(item->second, value);
-        else if (operation == "FDELTAIL") result = listEraseTail(item->second, value);
+        else if (operation == "FDELHEAD") result = item->second.eraseHead(value);
+        else if (operation == "FDELTAIL") result = item->second.eraseTail(value);
         else if (operation == "FDELBEFORE")
         {
             if (!(input >> target)) { cout << "Missing target" << endl; return; }
-            result = listEraseBefore(item->second, target, value);
+            result = item->second.eraseBefore(target, value);
         }
         else
         {
             if (!(input >> target)) { cout << "Missing target" << endl; return; }
-            result = listEraseAfter(item->second, target, value);
+            result = item->second.eraseAfter(target, value);
         }
         if (result) { changed = true; cout << "-> " << value << endl; }
         else cout << "-> Element not found" << endl;
         return;
     }
-
     if (operation == "FGET" || operation == "FFIND" || operation == "FREAD")
     {
         if (!(input >> name)) { cout << "Missing container name" << endl; return; }
@@ -417,13 +361,13 @@ void execute(const string &command, Database &db, bool &changed)
         else if (operation == "FGET")
         {
             if (!(input >> index)) { cout << "Missing index" << endl; return; }
-            if (listGetAt(item->second, index, value)) cout << "-> " << value << endl;
+            if (item->second.getAt(index, value)) cout << "-> " << value << endl;
             else cout << "-> Invalid index" << endl;
         }
         else
         {
             if (!(input >> value)) { cout << "Missing value" << endl; return; }
-            printResult(listContains(item->second, value));
+            printResult(item->second.contains(value));
         }
         return;
     }
@@ -435,25 +379,22 @@ void execute(const string &command, Database &db, bool &changed)
             if (!(input >> name >> target >> value)) { cout << "Invalid arguments" << endl; return; }
             bool result;
             if (operation == "LBEFORE")
-                result = dListInsertBefore(db.doublyLists[name], target, value);
+                result = db.doublyLists[name].insertBefore(target, value);
             else
-                result = dListInsertAfter(db.doublyLists[name], target, value);
+                result = db.doublyLists[name].insertAfter(target, value);
             if (result) { changed = true; cout << "-> OK" << endl; }
             else cout << "-> Target not found" << endl;
         }
         else
         {
             if (!(input >> name >> value)) { cout << "Invalid arguments" << endl; return; }
-            if (operation == "LHEAD")
-                dListPushFront(db.doublyLists[name], value);
-            else
-                dListPushBack(db.doublyLists[name], value);
+            if (operation == "LHEAD") db.doublyLists[name].pushFront(value);
+            else db.doublyLists[name].pushBack(value);
             changed = true;
             cout << "-> OK" << endl;
         }
         return;
     }
-
     if (operation == "LDEL" || operation == "LDELAT" || operation == "LDELHEAD" || operation == "LDELTAIL" || operation == "LDELBEFORE" || operation == "LDELAFTER")
     {
         if (!(input >> name)) { cout << "Missing container name" << endl; return; }
@@ -463,30 +404,29 @@ void execute(const string &command, Database &db, bool &changed)
         if (operation == "LDEL")
         {
             if (!(input >> value)) { cout << "Missing value" << endl; return; }
-            result = dListEraseValue(item->second, value);
+            result = item->second.eraseValue(value);
         }
         else if (operation == "LDELAT")
         {
             if (!(input >> index)) { cout << "Missing index" << endl; return; }
-            result = dListEraseAt(item->second, index, value);
+            result = item->second.eraseAt(index, value);
         }
-        else if (operation == "LDELHEAD") result = dListEraseHead(item->second, value);
-        else if (operation == "LDELTAIL") result = dListEraseTail(item->second, value);
+        else if (operation == "LDELHEAD") result = item->second.eraseHead(value);
+        else if (operation == "LDELTAIL") result = item->second.eraseTail(value);
         else if (operation == "LDELBEFORE")
         {
             if (!(input >> target)) { cout << "Missing target" << endl; return; }
-            result = dListEraseBefore(item->second, target, value);
+            result = item->second.eraseBefore(target, value);
         }
         else
         {
             if (!(input >> target)) { cout << "Missing target" << endl; return; }
-            result = dListEraseAfter(item->second, target, value);
+            result = item->second.eraseAfter(target, value);
         }
         if (result) { changed = true; cout << "-> " << value << endl; }
         else cout << "-> Element not found" << endl;
         return;
     }
-
     if (operation == "LGET" || operation == "LFIND" || operation == "LREAD")
     {
         if (!(input >> name)) { cout << "Missing container name" << endl; return; }
@@ -496,13 +436,13 @@ void execute(const string &command, Database &db, bool &changed)
         else if (operation == "LGET")
         {
             if (!(input >> index)) { cout << "Missing index" << endl; return; }
-            if (dListGetAt(item->second, index, value)) cout << "-> " << value << endl;
+            if (item->second.getAt(index, value)) cout << "-> " << value << endl;
             else cout << "-> Invalid index" << endl;
         }
         else
         {
             if (!(input >> value)) { cout << "Missing value" << endl; return; }
-            printResult(dListContains(item->second, value));
+            printResult(item->second.contains(value));
         }
         return;
     }
@@ -510,7 +450,7 @@ void execute(const string &command, Database &db, bool &changed)
     if (operation == "SPUSH")
     {
         if (!(input >> name >> value)) { cout << "Invalid arguments" << endl; return; }
-        stackPush(db.stacks[name], value);
+        db.stacks[name].push(value);
         changed = true;
         cout << "-> OK" << endl;
         return;
@@ -523,12 +463,12 @@ void execute(const string &command, Database &db, bool &changed)
         if (operation == "SREAD") printValues(item->second);
         else if (operation == "SGET")
         {
-            if (stackPeek(item->second, value)) cout << "-> " << value << endl;
+            if (item->second.peek(value)) cout << "-> " << value << endl;
             else cout << "-> Stack is empty" << endl;
         }
         else
         {
-            if (stackPop(item->second, value)) { changed = true; cout << "-> " << value << endl; }
+            if (item->second.pop(value)) { changed = true; cout << "-> " << value << endl; }
             else cout << "-> Stack is empty" << endl;
         }
         return;
@@ -537,7 +477,7 @@ void execute(const string &command, Database &db, bool &changed)
     if (operation == "QPUSH")
     {
         if (!(input >> name >> value)) { cout << "Invalid arguments" << endl; return; }
-        queuePush(db.queues[name], value);
+        db.queues[name].push(value);
         changed = true;
         cout << "-> OK" << endl;
         return;
@@ -550,77 +490,54 @@ void execute(const string &command, Database &db, bool &changed)
         if (operation == "QREAD") printValues(item->second);
         else if (operation == "QGET")
         {
-            if (queuePeek(item->second, value)) cout << "-> " << value << endl;
+            if (item->second.peek(value)) cout << "-> " << value << endl;
             else cout << "-> Queue is empty" << endl;
         }
         else
         {
-            if (queuePop(item->second, value)) { changed = true; cout << "-> " << value << endl; }
+            if (item->second.pop(value)) { changed = true; cout << "-> " << value << endl; }
             else cout << "-> Queue is empty" << endl;
         }
         return;
     }
 
-    // Binary tree commands
     if (operation == "TINSERT")
     {
         if (!(input >> name >> value)) { cout << "Invalid arguments" << endl; return; }
-        if (treeInsert(db.trees[name], value))
-        {
-            changed = true;
-            cout << "-> OK" << endl;
-        }
-        else
-            cout << "-> EXISTS" << endl;
+        if (containsTree(db.trees[name], value)) cout << "-> EXISTS" << endl;
+        else { insertTree(db.trees[name], value); changed = true; cout << "-> OK" << endl; }
         return;
     }
-
     if (operation == "TGET" || operation == "ISMEMBER")
     {
         if (!(input >> name >> value)) { cout << "Invalid arguments" << endl; return; }
         auto item = db.trees.find(name);
-        bool result = (item != db.trees.end() && treeContains(item->second, value));
-        printResult(result);
+        printResult(item != db.trees.end() && containsTree(item->second, value));
         return;
     }
-
-    if (operation == "TISFULL" || operation == "TFULL")
+    if (operation == "ISFULL")
     {
         if (!(input >> name)) { cout << "Missing container name" << endl; return; }
         auto item = db.trees.find(name);
-        if (item == db.trees.end())
-            cout << "-> Container not found" << endl;
-        else
-            printResult(treeIsFull(item->second));
+        printResult(item != db.trees.end() && isFullTree(item->second));
         return;
     }
-
     if (operation == "TREAD")
     {
         if (!(input >> name)) { cout << "Missing container name" << endl; return; }
         auto item = db.trees.find(name);
-        if (item != db.trees.end()) printValues(item->second);
+        if (item != db.trees.end())
+        {
+            cout << "->";
+            if (treeEmpty(item->second)) cout << " (empty)";
+            else writeTreeValues(item->second, cout);
+            cout << endl;
+        }
         else cout << "-> Container not found" << endl;
         return;
     }
 
     cout << "Unknown command. Enter HELP" << endl;
-}
-
-void clearDatabase(Database &db)
-{
-    for (auto &item : db.arrays)
-        arrayClear(item.second);
-    for (auto &item : db.singlyLists)
-        listClear(item.second);
-    for (auto &item : db.doublyLists)
-        dListClear(item.second);
-    for (auto &item : db.stacks)
-        stackClear(item.second);
-    for (auto &item : db.queues)
-        queueClear(item.second);
-    for (auto &item : db.trees)
-        treeClear(item.second);
 }
 
 int main(int argc, char *argv[])
@@ -674,6 +591,8 @@ int main(int argc, char *argv[])
         }
     }
 
-    clearDatabase(db);
+    for (auto &item : db.trees)
+        clearTree(item.second);
+
     return 0;
 }

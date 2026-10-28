@@ -1,15 +1,29 @@
-#pragma once
-#include <vector>
+#ifndef STACK_H
+#define STACK_H
+
+#include <ostream>
+#include <string>
 
 class StackData
 {
 private:
-    std::vector<int> items;
+    std::string *items;
+    int count;
+    int capacity;
+
+    void grow();
 
 public:
-    void push(int value);
-    bool pop(int &value);
-    std::vector<int> values() const;
-    void load(const std::vector<int> &data);
+    StackData();
+    ~StackData();
+    StackData(const StackData &) = delete;
+    StackData &operator=(const StackData &) = delete;
+
+    void push(const std::string &value);
+    bool pop(std::string &value);
+    bool peek(std::string &value) const;
+    bool empty() const;
+    void writeValues(std::ostream &out) const;
 };
 
+#endif

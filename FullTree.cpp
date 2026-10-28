@@ -1,138 +1,107 @@
 #include "FullTree.h"
-#include <queue>
 
-bool treeContainsNode(TNode *node, int value)
+static bool insertAtLevel(TreeNode *root, TreeNode *newNode, int level)
 {
-    if (node == nullptr)
+    if (root == nullptr)
         return false;
 
-    if (node->item == value)
-        return true;
-
-    return treeContainsNode(node->left, value) ||
-           treeContainsNode(node->right, value);
-}
-
-bool treeContains(const FullTree &tree, int value)
-{
-    return treeContainsNode(tree.root, value);
-}
-
-bool treeInsert(FullTree &tree, int value)
-{
-    if (treeContains(tree, value))
-        return false;
-
-    TNode *newNode = new TNode{value, nullptr, nullptr};
-
-    if (tree.root == nullptr)
+    if (level == 1)
     {
-        tree.root = newNode;
-        tree.count = 1;
-        return true;
-    }
-
-    std::queue<TNode*> nodes;
-    nodes.push(tree.root);
-
-    while (!nodes.empty())
-    {
-        TNode *current = nodes.front();
-        nodes.pop();
-
-        if (current->left == nullptr)
+        if (root->left == nullptr)
         {
-            current->left = newNode;
-            tree.count++;
+            root->left = newNode;
             return true;
         }
-
-        nodes.push(current->left);
-
-        if (current->right == nullptr)
+        if (root->right == nullptr)
         {
-            current->right = newNode;
-            tree.count++;
+            root->right = newNode;
             return true;
         }
-
-        nodes.push(current->right);
+        return false;
     }
 
-    return false;
+    return insertAtLevel(root->left, newNode, level - 1) ||
+           insertAtLevel(root->right, newNode, level - 1);
 }
 
-bool treeIsFullNode(TNode *node)
+static int treeHeight(TreeNode *root)
 {
-    if (node == nullptr)
-        return true;
-
-    if (node->left == nullptr && node->right == nullptr)
-        return true;
-
-    if (node->left == nullptr || node->right == nullptr)
-        return false;
-
-    return treeIsFullNode(node->left) &&
-           treeIsFullNode(node->right);
-}
-
-bool treeIsFull(const FullTree &tree)
-{
-    return treeIsFullNode(tree.root);
-}
-
-int treeHeight(TNode *node)
-{
-    if (node == nullptr)
+    if (root == nullptr)
         return 0;
 
-    int left = treeHeight(node->left);
-    int right = treeHeight(node->right);
-
-    if (left > right)
-        return left + 1;
-
-    return right + 1;
+    int leftHeight = treeHeight(root->left);
+    int rightHeight = treeHeight(root->right);
+    return (leftHeight > rightHeight ? leftHeight : rightHeight) + 1;
 }
 
-void treeWriteLevel(TNode *node, int level, std::ostream &out)
+static void writeLevel(TreeNode *root, int level, std::ostream &out)
 {
-    if (node == nullptr)
+    if (root == nullptr)
         return;
 
     if (level == 1)
-        out << " " << node->item;
-    else
     {
-        treeWriteLevel(node->left, level - 1, out);
-        treeWriteLevel(node->right, level - 1, out);
-    }
-}
-
-void treeWrite(const FullTree &tree, std::ostream &out)
-{
-    int height = treeHeight(tree.root);
-
-    for (int i = 1; i <= height; i++)
-        treeWriteLevel(tree.root, i, out);
-}
-
-void treeClearNode(TNode *node)
-{
-    if (node == nullptr)
+        out << " " << root->info;
         return;
+    }
 
-    treeClearNode(node->left);
-    treeClearNode(node->right);
-
-    delete node;
+    writeLevel(root->left, level - 1, out);
+    writeLevel(root->right, level - 1, out);
 }
 
-void treeClear(FullTree &tree)
+void insertTree(TreeNode *&root, const int &value)
 {
-    treeClearNode(tree.root);
+    TreeNode *newNode = new TreeNode{value, nullptr, nullptr};
+    if (root == nullptr)
+    {
+        root = newNode;
+        return;
+    }
 
-    tree.root = nullptr;
-    tree.count = 0;
+    int level = 1;
+    while (!insertAtLevel(root, newNode, level))
+        level++;
+}
+
+bool containsTree(TreeNode *root, const int &value)
+{
+    if (root == nullptr)
+        return false;
+    if (root->info == value)
+        return true;
+    return containsTree(root->left, value) || containsTree(root->right, value);
+}
+
+bool isFullTree(TreeNode *root)
+{
+    if (root == nullptr)
+        return true;
+
+    if (root->left == nullptr && root->right == nullptr)
+        return true;
+    if (root->left == nullptr || root->right == nullptr)
+        return false;
+
+    return isFullTree(root->left) && isFullTree(root->right);
+}
+
+bool treeEmpty(TreeNode *root)
+{
+    return root == nullptr;
+}
+
+void writeTreeValues(TreeNode *root, std::ostream &out)
+{
+    int height = treeHeight(root);
+    for (int level = 1; level <= height; level++)
+        writeLevel(root, level, out);
+}
+
+void clearTree(TreeNode *root)
+{
+    if (root == nullptr)
+        return;
+    clearTree(root->left);
+    clearTree(root->right);
+    delete root;
 }

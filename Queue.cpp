@@ -1,27 +1,75 @@
 #include "Queue.h"
 
-void QueueData::push(int value)
+QueueData::QueueData()
 {
-    items.push_back(value);
+    head = nullptr;
+    tail = nullptr;
 }
 
-bool QueueData::pop(int &value)
+QueueData::~QueueData()
 {
-    if (items.empty()) return false;
-    value = items.front();
-    items.pop_front();
+    while (head != nullptr)
+    {
+        QNode *current = head;
+        head = head->next;
+        delete current;
+    }
+}
+
+void QueueData::push(const std::string &value)
+{
+    QNode *newNode = new QNode;
+    newNode->info = value;
+    newNode->next = nullptr;
+
+    if (tail == nullptr)
+    {
+        head = newNode;
+        tail = newNode;
+    }
+    else
+    {
+        tail->next = newNode;
+        tail = newNode;
+    }
+}
+
+bool QueueData::pop(std::string &value)
+{
+    if (head == nullptr)
+        return false;
+
+    QNode *current = head;
+    value = current->info;
+    head = head->next;
+
+    if (head == nullptr)
+        tail = nullptr;
+
+    delete current;
     return true;
 }
 
-
-std::vector<int> QueueData::values() const
+bool QueueData::peek(std::string &value) const
 {
-    return std::vector<int>(items.begin(), items.end());
+    if (head == nullptr)
+        return false;
+
+    value = head->info;
+    return true;
 }
 
-void QueueData::load(const std::vector<int> &data)
+bool QueueData::empty() const
 {
-    items.clear();
-    for (int value : data)
-        items.push_back(value);
+    return head == nullptr;
+}
+
+void QueueData::writeValues(std::ostream &out) const
+{
+    QNode *current = head;
+    while (current != nullptr)
+    {
+        out << " " << current->info;
+        current = current->next;
+    }
 }

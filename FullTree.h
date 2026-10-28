@@ -1,23 +1,18 @@
 #pragma once
+
 #include <ostream>
+#include <string>
 
-struct TNode
+struct TreeNode
 {
-    int item;
-    TNode *left;
-    TNode *right;
+    int info;
+    TreeNode *left;
+    TreeNode *right;
 };
 
-
-struct FullTree
-{
-    TNode *root = nullptr;
-    int count = 0;
-};
-
-bool treeInsert(FullTree &tree, int value);
-bool treeContains(const FullTree &tree, int value);
-bool treeIsFull(const FullTree &tree);
-void treeWrite(const FullTree &tree, std::ostream &out);
-void treeClear(FullTree &tree);
-
+void insertTree(TreeNode *&root, const int &value);
+bool containsTree(TreeNode *root, const int &value);
+bool isFullTree(TreeNode *root);
+bool treeEmpty(TreeNode *root);
+void writeTreeValues(TreeNode *root, std::ostream &out);
+void clearTree(TreeNode *root);

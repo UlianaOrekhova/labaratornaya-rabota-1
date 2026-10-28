@@ -1,16 +1,29 @@
 #pragma once
 
-#include <vector>
-#include <deque>
+#include <ostream>
+#include <string>
+
+struct QNode
+{
+    std::string info;
+    QNode *next;
+};
 
 class QueueData
 {
 private:
-    std::deque<int> items;
+    QNode *head;
+    QNode *tail;
 
 public:
-    void push(int value);
-    bool pop(int &value);
-    std::vector<int> values() const;
-    void load(const std::vector<int> &data);
+    QueueData();
+    ~QueueData();
+    QueueData(const QueueData &) = delete;
+    QueueData &operator=(const QueueData &) = delete;
+
+    void push(const std::string &value);
+    bool pop(std::string &value);
+    bool peek(std::string &value) const;
+    bool empty() const;
+    void writeValues(std::ostream &out) const;
 };

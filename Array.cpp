@@ -1,91 +1,97 @@
 #include "Array.h"
 
-void arrayGrow(ArrayData &array)
+ArrayData::ArrayData()
 {
-    int newCapacity = 10;
-    if (array.capacity > 0)
-        newCapacity = array.capacity * 2;
-
-    int *newItems = new int[newCapacity];
-    for (int i = 0; i < array.count; i++)
-        newItems[i] = array.items[i];
-
-    delete[] array.items;
-    array.items = newItems;
-    array.capacity = newCapacity;
+    capacity = 10;
+    count = 0;
+    items = new std::string[capacity];
 }
 
-void arrayPushBack(ArrayData &array, int value)
+ArrayData::~ArrayData()
 {
-    if (array.count == array.capacity)
-        arrayGrow(array);
-
-    array.items[array.count] = value;
-    array.count++;
+    delete[] items;
 }
 
-bool arrayInsertAt(ArrayData &array, int index, int value)
+void ArrayData::grow()
 {
-    if (index < 0 || index > array.count)
+    capacity = capacity * 2;
+    std::string *newItems = new std::string[capacity];
+
+    for (int i = 0; i < count; i++)
+        newItems[i] = items[i];
+
+    delete[] items;
+    items = newItems;
+}
+
+void ArrayData::pushBack(const std::string &value)
+{
+    if (count == capacity)
+        grow();
+
+    items[count] = value;
+    count++;
+}
+
+bool ArrayData::insertAt(int index, const std::string &value)
+{
+    if (index < 0 || index > count)
         return false;
 
-    if (array.count == array.capacity)
-        arrayGrow(array);
+    if (count == capacity)
+        grow();
 
-    for (int i = array.count; i > index; i--)
-        array.items[i] = array.items[i - 1];
+    for (int i = count; i > index; i--)
+        items[i] = items[i - 1];
 
-    array.items[index] = value;
-    array.count++;
+    items[index] = value;
+    count++;
     return true;
 }
 
-bool arrayGetAt(const ArrayData &array, int index, int &value)
+bool ArrayData::getAt(int index, std::string &value) const
 {
-    if (index < 0 || index >= array.count)
+    if (index < 0 || index >= count)
         return false;
 
-    value = array.items[index];
+    value = items[index];
     return true;
 }
 
-bool arrayEraseAt(ArrayData &array, int index, int &value)
+bool ArrayData::eraseAt(int index, std::string &value)
 {
-    if (index < 0 || index >= array.count)
+    if (index < 0 || index >= count)
         return false;
 
-    value = array.items[index];
-    for (int i = index; i < array.count - 1; i++)
-        array.items[i] = array.items[i + 1];
+    value = items[index];
+    for (int i = index; i < count - 1; i++)
+        items[i] = items[i + 1];
 
-    array.count--;
+    count--;
     return true;
 }
 
-bool arraySetAt(ArrayData &array, int index, int value)
+bool ArrayData::setAt(int index, const std::string &value)
 {
-    if (index < 0 || index >= array.count)
+    if (index < 0 || index >= count)
         return false;
 
-    array.items[index] = value;
+    items[index] = value;
     return true;
 }
 
-int arrayLength(const ArrayData &array)
+int ArrayData::length() const
 {
-    return array.count;
+    return count;
 }
 
-void arrayWrite(const ArrayData &array, std::ostream &out)
+bool ArrayData::empty() const
 {
-    for (int i = 0; i < array.count; i++)
-        out << " " << array.items[i];
+    return count == 0;
 }
 
-void arrayClear(ArrayData &array)
+void ArrayData::writeValues(std::ostream &out) const
 {
-    delete[] array.items;
-    array.items = nullptr;
-    array.count = 0;
-    array.capacity = 0;
+    for (int i = 0; i < count; i++)
+        out << " " << items[i];
 }
